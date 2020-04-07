@@ -9,12 +9,14 @@
 #include "CacheLine.h"
 #include "BinaryTree.h"
 #include "LRUStack.h"
+#include "MUCounter.h"
 
 class CacheGroup {
 public:
     CacheLine *cacheLine;
     BinaryTree *binaryTree;
     LRUStack *lruStack;
+    MUCounter *muCounter;
 
     CacheGroup(int log_ways = 3, int rs = 0);
     ~CacheGroup();

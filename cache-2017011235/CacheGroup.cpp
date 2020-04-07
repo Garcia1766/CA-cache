@@ -20,6 +20,9 @@ CacheGroup::CacheGroup(int log_ways, int rs) {
             binaryTree = new BinaryTree(log_ways);
         } else if (rs == 1) {
             lruStack = new LRUStack(log_ways);
+        } else if (rs == 3) {
+            lruStack = new LRUStack(log_ways);
+            muCounter = new MUCounter(log_ways);
         }
     }
 }
@@ -41,6 +44,9 @@ void CacheGroup::SetWays(int log_ways, int rs) {
             binaryTree = new BinaryTree(log_ways);
         } else if (rs == 1) {
             lruStack = new LRUStack(log_ways);
+        } else if (rs == 3) {
+            lruStack = new LRUStack(log_ways);
+            muCounter = new MUCounter(log_ways);
         }
     }
 }
@@ -57,6 +63,9 @@ bool CacheGroup::Read(int log_ways, uint64_t tag, int rs) {
                     binaryTree->Update(log_ways, i);
                 } else if (rs == 1) {
                     lruStack->Update(log_ways, i);
+                } else if (rs == 3) {
+                    lruStack->Update(log_ways, i);
+                    muCounter->IncCount(i);
                 }
             }
             return true;
@@ -71,6 +80,9 @@ bool CacheGroup::Read(int log_ways, uint64_t tag, int rs) {
                 binaryTree->Update(log_ways, last_invalid);
             } else if (rs == 1) {
                 lruStack->Update(log_ways, last_invalid);
+            } else if (rs == 3) {
+                lruStack->Update(log_ways, last_invalid);
+                muCounter->IncCount(last_invalid);
             }
         }
     } else {
@@ -82,9 +94,17 @@ bool CacheGroup::Read(int log_ways, uint64_t tag, int rs) {
             } else if (rs == 1) {
                 which_replace = lruStack->GetWhichReplace(log_ways);
                 lruStack->Update(log_ways, which_replace);
+            } else if (rs == 3) {
+                for (int num_ind = ways - 1; num_ind >=0; --num_ind) {
+                    if (!muCounter->IsProtected(log_ways, lruStack->GetNum(log_ways, num_ind))) {
+                        which_replace = lruStack->GetNum(log_ways, num_ind);
+                        lruStack->Update(log_ways, which_replace);
+                        muCounter->SetCount(which_replace, 0);
+                        break;
+                    }
+                }
             }
         }
-        //printf("which_replace = %d\n", which_replace);
         cacheLine[which_replace].RemoveDirty();
         cacheLine[which_replace].SetTag(log_ways, tag);
     }
@@ -106,6 +126,9 @@ bool CacheGroup::Write(int log_ways, uint64_t tag, int wh, int wm, int rs) {
                     binaryTree->Update(log_ways, i);
                 } else if (rs == 1) {
                     lruStack->Update(log_ways, i);
+                } else if (rs == 3) {
+                    lruStack->Update(log_ways, i);
+                    muCounter->IncCount(i);
                 }
             }
             return true;
@@ -122,6 +145,9 @@ bool CacheGroup::Write(int log_ways, uint64_t tag, int wh, int wm, int rs) {
                 binaryTree->Update(log_ways, last_invalid);
             } else if (rs == 1) {
                 lruStack->Update(log_ways, last_invalid);
+            } else if (rs == 3) {
+                lruStack->Update(log_ways, last_invalid);
+                muCounter->IncCount(last_invalid);
             }
         }
     } else {
@@ -134,9 +160,17 @@ bool CacheGroup::Write(int log_ways, uint64_t tag, int wh, int wm, int rs) {
                 } else if (rs == 1) {
                     which_replace = lruStack->GetWhichReplace(log_ways);
                     lruStack->Update(log_ways, which_replace);
+                } else if (rs == 3) {
+                    for (int num_ind = ways - 1; num_ind >=0; --num_ind) {
+                        if (!muCounter->IsProtected(log_ways, lruStack->GetNum(log_ways, num_ind))) {
+                            which_replace = lruStack->GetNum(log_ways, num_ind);
+                            lruStack->Update(log_ways, which_replace);
+                            muCounter->SetCount(which_replace, 0);
+                            break;
+                        }
+                    }
                 }
             }
-            //printf("which_replace = %d\n", which_replace);
             cacheLine[which_replace].SetDirty();
             cacheLine[which_replace].SetTag(log_ways, tag);
         }

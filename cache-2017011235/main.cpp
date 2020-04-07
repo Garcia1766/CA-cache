@@ -23,6 +23,9 @@ float test(Cache &cache, string file_prefix, int log_ways, int log_offset, int w
         case 2:
             rss = "bitree";
             break;
+        case 3:
+            rss = "p-lru";
+            break;
         default:
             break;
     }
@@ -107,6 +110,9 @@ void beautiful_print(string filename, int log_ways, int log_offset, int wh, int 
         case 2:
             rss = "二叉树";
             break;
+        case 3:
+            rss = "Protected LRU";
+            break;
         default:
             break;
     }
@@ -127,6 +133,29 @@ int main(int argc, char *argv[]) {
         int wm = atoi(argv[5]);
         int rs = atoi(argv[6]);
         test(cache, file_prefix, log_ways, log_offset, wh, wm, rs);
+        return 0;
+    } else if (argc == 2) {
+        string experiment = string(argv[1]);
+        if (experiment == "replace") {
+            string filename = "../replace.csv";
+            FILE *output_file = fopen(filename.data(), "w");
+            fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
+            fclose(output_file);
+            for (int rs = 0; rs <= 3; ++rs) {
+                float miss_rate[10];
+                miss_rate[0] = test(cache, "astar", 3, 3, 0, 0, rs);
+                miss_rate[1] = test(cache, "bodytrack_1m", 3, 3, 0, 0, rs);
+                miss_rate[2] = test(cache, "bzip2", 3, 3, 0, 0, rs);
+                miss_rate[3] = test(cache, "canneal.uniq", 3, 3, 0, 0, rs);
+                miss_rate[4] = test(cache, "gcc", 3, 3, 0, 0, rs);
+                miss_rate[5] = test(cache, "mcf", 3, 3, 0, 0, rs);
+                miss_rate[6] = test(cache, "perlbench", 3, 3, 0, 0, rs);
+                miss_rate[7] = test(cache, "streamcluster", 3, 3, 0, 0, rs);
+                miss_rate[8] = test(cache, "swim", 3, 3, 0, 0, rs);
+                miss_rate[9] = test(cache, "twolf", 3, 3, 0, 0, rs);
+                beautiful_print(filename, 3, 3, 0, 0, rs, miss_rate);
+            }
+        }
         return 0;
     }
     string filename = "../ans.csv";

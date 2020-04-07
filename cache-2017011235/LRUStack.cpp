@@ -30,14 +30,14 @@ LRUStack::~LRUStack() {
 }
 
 int LRUStack::At(int ind) {
-    int num_chars = ind / 8;
-    int in_char = ind % 8;
+    int num_chars = ind >> 3;
+    int in_char = ind  - ((ind >> 3) << 3);
     return (stack[num_chars] & Pick1[in_char]) ? 1 : 0;
 }
 
 void LRUStack::ChangeTo(int ind, int val) {
-    int num_chars = ind / 8;
-    int in_char = ind % 8;
+    int num_chars = ind >> 3;
+    int in_char = ind  - ((ind >> 3) << 3);
     if (val == 0) {
         stack[num_chars] = (stack[num_chars] & Pick0[in_char]);
     } else {

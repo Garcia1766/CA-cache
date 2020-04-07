@@ -34,14 +34,14 @@ int BinaryTree::LeafRChild(int log_ways, int parent) {
 }
 
 bool BinaryTree::At(int ind) {
-    int num_chars = ind / 8;
-    int in_char = ind % 8;
+    int num_chars = ind >> 3;
+    int in_char = ind  - ((ind >> 3) << 3);
     return bitree[num_chars] & Pick1[in_char];
 }
 
 void BinaryTree::ChangeTo(int ind, int val) {
-    int num_chars = ind / 8;
-    int in_char = ind % 8;
+    int num_chars = ind >> 3;
+    int in_char = ind  - ((ind >> 3) << 3);
     if (val == 0) {
         //printf("num_chars = %d, in_char = %d\n", num_chars, in_char);
         bitree[num_chars] = (bitree[num_chars] & Pick0[in_char]);

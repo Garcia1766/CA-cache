@@ -1,6 +1,8 @@
 .idea/
 cmake-build-debug/
-log/
 CMakeLists.txt
 *.pptx
 *.xlsx
+*.log
+table.md
+CRC Protected LRU Algorithm.pdf
