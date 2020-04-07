@@ -1,0 +1,6 @@
+.idea/
+cmake-build-debug/
+log/
+CMakeLists.txt
+*.pptx
+*.xlsx
