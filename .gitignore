@@ -4,5 +4,4 @@ CMakeLists.txt
 *.pptx
 *.xlsx
 *.log
-table.md
 CRC Protected LRU Algorithm.pdf

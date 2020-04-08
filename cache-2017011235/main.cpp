@@ -5,7 +5,7 @@
 
 using namespace std;
 
-float test(Cache &cache, string file_prefix, int log_ways, int log_offset, int wh, int wm, int rs) {
+float test(Cache &cache, string file_prefix, int log_ways, int log_offset, int wh, int wm, int rs, bool w) {
     cache.SetShape(log_ways, log_offset, rs);
     string input_name = "../trace/" + file_prefix + ".trace";
     int ways = log2val(log_ways);
@@ -45,7 +45,7 @@ float test(Cache &cache, string file_prefix, int log_ways, int log_offset, int w
     for (; !feof(input_file);) {
         if (file_prefix == "bodytrack_1m" || file_prefix == "canneal.uniq" || file_prefix == "streamcluster") {
             fscanf(input_file, "%lx\n", &v_addr);
-            method = 'r';
+            method = w ? 'w' : 'r';
         } else {
             fscanf(input_file, "%c %lx\n", &method, &v_addr);
         }
@@ -124,6 +124,8 @@ void beautiful_print(string filename, int log_ways, int log_offset, int wh, int 
 }
 
 int main(int argc, char *argv[]) {
+    string file_prefix[10] = {"astar", "bodytrack_1m", "bzip2", "canneal.uniq", "gcc",
+                              "mcf", "perlbench", "streamcluster", "swim", "twolf"};
     Cache cache;
     if (argc == 7) {
         string file_prefix = string(argv[1]);
@@ -132,7 +134,7 @@ int main(int argc, char *argv[]) {
         int wh = atoi(argv[4]);
         int wm = atoi(argv[5]);
         int rs = atoi(argv[6]);
-        test(cache, file_prefix, log_ways, log_offset, wh, wm, rs);
+        test(cache, file_prefix, log_ways, log_offset, wh, wm, rs, false);
         return 0;
     } else if (argc == 2) {
         string experiment = string(argv[1]);
@@ -143,17 +145,58 @@ int main(int argc, char *argv[]) {
             fclose(output_file);
             for (int rs = 0; rs <= 3; ++rs) {
                 float miss_rate[10];
-                miss_rate[0] = test(cache, "astar", 3, 3, 0, 0, rs);
-                miss_rate[1] = test(cache, "bodytrack_1m", 3, 3, 0, 0, rs);
-                miss_rate[2] = test(cache, "bzip2", 3, 3, 0, 0, rs);
-                miss_rate[3] = test(cache, "canneal.uniq", 3, 3, 0, 0, rs);
-                miss_rate[4] = test(cache, "gcc", 3, 3, 0, 0, rs);
-                miss_rate[5] = test(cache, "mcf", 3, 3, 0, 0, rs);
-                miss_rate[6] = test(cache, "perlbench", 3, 3, 0, 0, rs);
-                miss_rate[7] = test(cache, "streamcluster", 3, 3, 0, 0, rs);
-                miss_rate[8] = test(cache, "swim", 3, 3, 0, 0, rs);
-                miss_rate[9] = test(cache, "twolf", 3, 3, 0, 0, rs);
+                for (int i = 0; i < 10; ++i) {
+                    miss_rate[i] = test(cache, file_prefix[i], 3, 3, 0, 0, rs, false);
+                }
                 beautiful_print(filename, 3, 3, 0, 0, rs, miss_rate);
+            }
+        } else if (experiment == "write") {
+            string filename = "../write.csv";
+            FILE *output_file = fopen(filename.data(), "w");
+            fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
+            fclose(output_file);
+            for (int wm = 0; wm <= 1 ; ++wm) {
+                for (int wh = 0; wh <=1 ; ++wh) {
+                    float miss_rate[10];
+                    for (int i = 0; i < 10; ++i) {
+                        miss_rate[i] = test(cache, file_prefix[i], 3, 3, wh, wm, 1, true);
+                    }
+                    beautiful_print(filename, 3, 3, wh, wm, 1, miss_rate);
+                }
+            }
+        } else if (experiment == "p-lru") {
+            string filename = "../p-lru.csv";
+            FILE *output_file = fopen(filename.data(), "a");
+            fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
+            fclose(output_file);
+            float miss_rate[10];
+            for (int i = 0; i < 10; ++i) {
+                miss_rate[i] = test(cache, file_prefix[i], 3, 3, 0, 0, 3, false);
+            }
+            beautiful_print(filename, 3, 3, 0, 0, 3, miss_rate);
+        } else if (experiment == "blocksize") {
+            string filename = "../blocksize.csv";
+            FILE *output_file = fopen(filename.data(), "w");
+            fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
+            fclose(output_file);
+            for (int log_offset = 0; log_offset <= 14; ++log_offset) {
+                float miss_rate[10];
+                for (int i = 0; i < 10; ++i) {
+                    miss_rate[i] = test(cache, file_prefix[i], 3, log_offset, 0, 0, 1, false);
+                }
+                beautiful_print(filename, 3, log_offset, 0, 0, 1, miss_rate);
+            }
+        } else if (experiment == "ways") {
+            string filename = "../ways.csv";
+            FILE *output_file = fopen(filename.data(), "w");
+            fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
+            fclose(output_file);
+            for (int log_ways = 0; log_ways <= 14; ++log_ways) {
+                float miss_rate[10];
+                for (int i = 0; i < 10; ++i) {
+                    miss_rate[i] = test(cache, file_prefix[i], log_ways, 3, 0, 0, 1, false);
+                }
+                beautiful_print(filename, log_ways, 3, 0, 0, 1, miss_rate);
             }
         }
         return 0;
@@ -162,53 +205,32 @@ int main(int argc, char *argv[]) {
     FILE *output_file = fopen(filename.data(), "w");
     fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
     fclose(output_file);
-    for (int log_offset = 3; log_offset <= 6; ++log_offset) {
-        if (log_offset == 4) continue;
-        for (int log_ways = 0; log_ways <= 17 - log_offset; ++log_ways) {
-            if (log_ways == 0 || log_ways == 2 || log_ways == 3 || log_ways == 17 - log_offset) {
-                float miss_rate[10];
-                miss_rate[0] = test(cache, "astar", log_ways, log_offset, 0, 0, 1);
-                miss_rate[1] = test(cache, "bodytrack_1m", log_ways, log_offset, 0, 0, 1);
-                miss_rate[2] = test(cache, "bzip2", log_ways, log_offset, 0, 0, 1);
-                miss_rate[3] = test(cache, "canneal.uniq", log_ways, log_offset, 0, 0, 1);
-                miss_rate[4] = test(cache, "gcc", log_ways, log_offset, 0, 0, 1);
-                miss_rate[5] = test(cache, "mcf", log_ways, log_offset, 0, 0, 1);
-                miss_rate[6] = test(cache, "perlbench", log_ways, log_offset, 0, 0, 1);
-                miss_rate[7] = test(cache, "streamcluster", log_ways, log_offset, 0, 0, 1);
-                miss_rate[8] = test(cache, "swim", log_ways, log_offset, 0, 0, 1);
-                miss_rate[9] = test(cache, "twolf", log_ways, log_offset, 0, 0, 1);
-                beautiful_print(filename, log_ways, log_offset, 0, 0, 1, miss_rate);
-            }
-        }
-    }
-    for (int rs = 0; rs <= 2; ++rs) {
+    for (int rs = 0; rs <= 3; ++rs) {
         float miss_rate[10];
-        miss_rate[0] = test(cache, "astar", 3, 3, 0, 0, rs);
-        miss_rate[1] = test(cache, "bodytrack_1m", 3, 3, 0, 0, rs);
-        miss_rate[2] = test(cache, "bzip2", 3, 3, 0, 0, rs);
-        miss_rate[3] = test(cache, "canneal.uniq", 3, 3, 0, 0, rs);
-        miss_rate[4] = test(cache, "gcc", 3, 3, 0, 0, rs);
-        miss_rate[5] = test(cache, "mcf", 3, 3, 0, 0, rs);
-        miss_rate[6] = test(cache, "perlbench", 3, 3, 0, 0, rs);
-        miss_rate[7] = test(cache, "streamcluster", 3, 3, 0, 0, rs);
-        miss_rate[8] = test(cache, "swim", 3, 3, 0, 0, rs);
-        miss_rate[9] = test(cache, "twolf", 3, 3, 0, 0, rs);
+        for (int i = 0; i < 10; ++i) {
+            miss_rate[i] = test(cache, file_prefix[i], 3, 3, 0, 0, rs, false);
+        }
         beautiful_print(filename, 3, 3, 0, 0, rs, miss_rate);
     }
     for (int wm = 0; wm <= 1 ; ++wm) {
         for (int wh = 0; wh <=1 ; ++wh) {
             float miss_rate[10];
-            miss_rate[0] = test(cache, "astar", 3, 3, wh, wm, 1);
-            miss_rate[1] = test(cache, "bodytrack_1m", 3, 3, wh, wm, 1);
-            miss_rate[2] = test(cache, "bzip2", 3, 3, wh, wm, 1);
-            miss_rate[3] = test(cache, "canneal.uniq", 3, 3, wh, wm, 1);
-            miss_rate[4] = test(cache, "gcc", 3, 3, wh, wm, 1);
-            miss_rate[5] = test(cache, "mcf", 3, 3, wh, wm, 1);
-            miss_rate[6] = test(cache, "perlbench", 3, 3, wh, wm, 1);
-            miss_rate[7] = test(cache, "streamcluster", 3, 3, wh, wm, 1);
-            miss_rate[8] = test(cache, "swim", 3, 3, wh, wm, 1);
-            miss_rate[9] = test(cache, "twolf", 3, 3, wh, wm, 1);
+            for (int i = 0; i < 10; ++i) {
+                miss_rate[i] = test(cache, file_prefix[i], 3, 3, wh, wm, 1, false);
+            }
             beautiful_print(filename, 3, 3, wh, wm, 1, miss_rate);
+        }
+    }
+    for (int log_offset = 3; log_offset <= 6; ++log_offset) {
+        if (log_offset == 4) continue;
+        for (int log_ways = 0; log_ways <= 17 - log_offset; ++log_ways) {
+            if (log_ways == 0 || log_ways == 2 || log_ways == 3 || log_ways == 17 - log_offset) {
+                float miss_rate[10];
+                for (int i = 0; i < 10; ++i) {
+                    miss_rate[i] = test(cache, file_prefix[i], log_ways, log_offset, 0, 0, 1, false);
+                }
+                beautiful_print(filename, log_ways, log_offset, 0, 0, 1, miss_rate);
+            }
         }
     }
     return 0;
