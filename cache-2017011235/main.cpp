@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
             }
         } else if (experiment == "p-lru") {
             string filename = "../p-lru.csv";
-            FILE *output_file = fopen(filename.data(), "a");
+            FILE *output_file = fopen(filename.data(), "w");
             fprintf(output_file, "astar,bodytrack_1m,bzip2,canneal.uniq,gcc,mcf,perlbench,streamcluster,swim,twolf, ,块大小,映射方式,写策略,替换策略\n");
             fclose(output_file);
             float miss_rate[10];

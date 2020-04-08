@@ -65,7 +65,7 @@ bool CacheGroup::Read(int log_ways, uint64_t tag, int rs) {
                     lruStack->Update(log_ways, i);
                 } else if (rs == 3) {
                     lruStack->Update(log_ways, i);
-                    muCounter->IncCount(i);
+                    muCounter->IncCount(log_ways, i);
                 }
             }
             return true;
@@ -82,7 +82,7 @@ bool CacheGroup::Read(int log_ways, uint64_t tag, int rs) {
                 lruStack->Update(log_ways, last_invalid);
             } else if (rs == 3) {
                 lruStack->Update(log_ways, last_invalid);
-                muCounter->IncCount(last_invalid);
+                muCounter->IncCount(log_ways, last_invalid);
             }
         }
     } else {
@@ -128,7 +128,7 @@ bool CacheGroup::Write(int log_ways, uint64_t tag, int wh, int wm, int rs) {
                     lruStack->Update(log_ways, i);
                 } else if (rs == 3) {
                     lruStack->Update(log_ways, i);
-                    muCounter->IncCount(i);
+                    muCounter->IncCount(log_ways, i);
                 }
             }
             return true;
@@ -147,7 +147,7 @@ bool CacheGroup::Write(int log_ways, uint64_t tag, int wh, int wm, int rs) {
                 lruStack->Update(log_ways, last_invalid);
             } else if (rs == 3) {
                 lruStack->Update(log_ways, last_invalid);
-                muCounter->IncCount(last_invalid);
+                muCounter->IncCount(log_ways, last_invalid);
             }
         }
     } else {

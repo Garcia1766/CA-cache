@@ -17,7 +17,7 @@ public:
 
     int GetCount(int num_ind);
     void SetCount(int num_ind, int ans);
-    void IncCount(int num_ind);
+    void IncCount(int log_ways, int num_ind);
 
     bool IsProtected(int log_ways, int num_ind);
 };

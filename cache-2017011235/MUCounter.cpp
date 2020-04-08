@@ -59,14 +59,22 @@ void MUCounter::SetCount(int num_ind, int ans) {
     }
 }
 
-void MUCounter::IncCount(int num_ind) {
+void MUCounter::IncCount(int log_ways, int num_ind) {
     int ans = GetCount(num_ind) + 1;
-    if (ans >= 16) ans = 8;
+    if (ans >= 16) {
+        int ways = log2val(log_ways);
+        for (int i = 0; i < ways - 1; ++i) {
+            SetCount(i, GetCount(i) >> 1);
+        }
+        SetCount(num_ind, 8);
+        return;
+    }
     SetCount(num_ind, ans);
 }
 
 bool MUCounter::IsProtected(int log_ways, int num_ind) {
     int protected_size = log2val(log_ways) >> 1;
+    // int protected_size = 4;
     int tar_cnt = GetCount(num_ind);
     int geq = 0;
     for (int i = 0; i < log2val(log_ways); ++i) {
