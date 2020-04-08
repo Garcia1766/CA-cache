@@ -3,5 +3,6 @@ cmake-build-debug/
 CMakeLists.txt
 *.pptx
 *.xlsx
+*.csv
 *.log
 CRC Protected LRU Algorithm.pdf
